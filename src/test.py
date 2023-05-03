@@ -113,12 +113,12 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--fig_dir',
-        type=str, default='/linux/gerinb/ensemble/cifar10-c-eval/figs',
+        type=str, default='/code/figs',
         help='path to the directory saving output figure',
     )
     parser.add_argument(
         '--data_root',
-        type=str, default='/export/local/imageset',
+        type=str, default='/data',
         help='root path to cifar10-c directory'
     )
     parser.add_argument(

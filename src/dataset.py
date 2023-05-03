@@ -3,6 +3,7 @@ import os
 import PIL
 import torch
 import torchvision
+import random
 
 from PIL import Image
 from torch.utils.data import Subset

@@ -1,0 +1,28 @@
+version: "3"
+services:
+  dev_env_bg:
+    container_name: cifar10c_container
+    privileged: true
+    user: $DOCKER_USER
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: cifarc:v0.1
+    volumes: # changer les parties avant le ':' pour correspondre à vos path
+      - /linux/gerinb/ensemble/cifar10-c-eval:/code
+      - /export/local/imageset:/data #/DATA2/gerinb:/data
+      - /linux/gerinb/ensemble/pytorch-cifar/checkpoint:/checkpoint
+    entrypoint: tail -f /dev/null
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities:
+                - gpu
+                - utility # nvidia-smi
+                - compute # CUDA. Required to avoid "CUDA version: N/A"
+                - video   # NVDEC/NVENC. For instance to use a hardware accelerated ffmpeg. Skip it if you don't need it
+    ipc: host
