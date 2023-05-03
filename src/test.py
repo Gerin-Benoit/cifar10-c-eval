@@ -14,7 +14,7 @@ from torchvision import transforms, datasets
 from tqdm import tqdm
 
 from utils import load_txt, accuracy, create_barplot, get_fname, AverageMeter
-from models.resnet import ResNet56
+from models.resnet import *
 from dataset import CIFAR10C
 
 
@@ -28,15 +28,15 @@ def main(opt, weight_path :str):
     device = torch.device(opt.gpu_id)
 
     # model
-    if opt.arch == 'resnet56':
-        model = ResNet56()
-    else:
-        raise ValueError()
-    try:
-        model.load_state_dict(torch.load(weight_path, map_location='cpu'))
-    except:
-        model.load_state_dict(torch.load(weight_path, map_location='cpu')['model'])
-    model.to(device)
+    x = torch.rand((1, 3, 32, 32)).to(device)
+    model = ResNet50(c=0, num_classes=10, norm_layer=opt.norm_layer, device=device, mod=opt.mod, fc_sn=False).to(device)
+    with torch.no_grad():
+        _ = model(x)  # in case of ActNorm
+    state_dict = torch.load(weight_path)
+    net_dict = state_dict["net"]
+    if opt.fix_statedict:
+        net_dict = fix_st(net_dict)
+    model.load_state_dict(net_dict)
     model.eval()
 
     transform = transforms.Compose([
@@ -55,7 +55,7 @@ def main(opt, weight_path :str):
                 )
             else:
                 dataset = CIFAR10C(
-                    os.path.join(opt.data_root, 'cifar10-c'),
+                    os.path.join(opt.data_root, 'CIFAR-10-C'),
                     cname, transform=transform
                 )
             loader = DataLoader(dataset, batch_size=opt.batch_size,
@@ -93,29 +93,32 @@ if __name__ == '__main__':
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument(
-        '--arch',
-        type=str, default='resnet56',
-        help='model name'
-    )
+    parser.add_argument('--c', type=float, default=0,
+                        help='Lipschitz constant: 0 for no SN, positive for soft, negative '
+                             'for hard')
+    parser.add_argument('--norm_layer', default='batchnorm',
+                        help='norm layer to use for constrained nets: batchnorm or actnorm')
+    parser.add_argument('--fix_statedict', action='store_true', default=False)
+    parser.add_argument('--mod', action='store_true', default=False,
+                        help='use increased sensitivity: average pooling shortcut and leaky relu')
     parser.add_argument(
         '--weight_dir',
         type=str,
-        help='path to the dicrectory containing model weights',
+        help='path to the directory containing model weights',
     )
     parser.add_argument(
         '--weight_path',
         type=str,
-        help='path to the dicrectory containing model weights',
+        help='path to the  model weights',
     )
     parser.add_argument(
         '--fig_dir',
-        type=str, default='figs',
-        help='path to the dicrectory saving output figure',
+        type=str, default='/linux/gerinb/ensemble/cifar10-c-eval/figs',
+        help='path to the directory saving output figure',
     )
     parser.add_argument(
         '--data_root',
-        type=str, default='/home/tanimu/data',
+        type=str, default='/export/local/imageset',
         help='root path to cifar10-c directory'
     )
     parser.add_argument(
