@@ -56,7 +56,7 @@ def main(opt, weight_path :str):
             else:
                 dataset = CIFAR10C(
                     os.path.join(opt.data_root, 'CIFAR-10-C'),
-                    cname, transform=transform
+                    cname, transform=transform, severity=5
                 )
             loader = DataLoader(dataset, batch_size=opt.batch_size,
                                 shuffle=False, num_workers=4)
